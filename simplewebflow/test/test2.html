@@ -1,0 +1,148 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Untitled Document</title>
+        <style type="text/css">
+            div {
+                border: 1px solid #008080;
+                float: left;
+                padding: 1px;
+            }
+            
+            #tools {
+                width: 202px;
+                height: 402px;
+            }
+            
+            #paper {
+                width: 402px;
+                height: 402px;
+            }
+        </style>
+        <script type="text/javascript" src="../lib/jquery/jquery-1.3.2.min.js">
+        </script>
+        <script type="text/javascript" src="../lib/raphael/raphael-1.5.2.js">
+        </script>
+        <script type="text/javascript">
+                        $(function(){
+                            init();
+                        });
+                        
+                        function init(){
+                            var tools = Raphael('tools', 200, 400);
+                            var paper = Raphael('paper', 400, 400);
+                            
+                            // init tools bg draw
+                            initToolsPanelBg(tools);
+                            
+                            // init tools panel draw
+                            initToolsPanelDraw(tools);
+                            
+                            // init paper bg draw
+                            initPaperBg(paper);
+                        }
+                        
+                        function initPaperBg(paper){
+                            paper.rect(0, 0, 400, 400).attr({
+                                fill: "#c0c0c0",
+                                stroke: "#ff0000"
+                            });
+                        }
+                        
+                        var tools_panel = {
+                            atr0: {
+                                stroke: "orange",
+                                fill: "green"
+                            },
+                            atr1: {
+                                stroke: "blue",
+                                fill: "pink"
+                            },
+                            node0: null,
+                            start: function(){
+                                this.ox = this.type == 'rect' ? this.attr('x') : this.attr('cx');
+                                this.oy = this.type == 'rect' ? this.attr('y') : this.attr('cy');
+                                this.attr({
+                                    opacity: .2
+                                });
+                            },
+                            move: function(dx, dy){
+                                var atr = this.type == 'rect' ? {
+                                    x: this.ox + dx,
+                                    y: this.oy + dy
+                                } : {
+                                    cx: this.ox + dx,
+                                    cy: this.oy + dy
+                                };
+                                this.attr(atr);
+                            },
+                            end: function(){
+                                this.attr({
+                                    opacity: 1
+                                });
+                            }
+                        };
+                        function initToolsPanelBg(tools){
+                            // draw background
+                            tools.rect(0, 0, 200, 400).attr({
+                                fill: "#c8c8c8",
+                                stroke: "#ff0000"
+                            });
+                            
+                            // draw bg line
+                            var tools_bg_line_atr = {
+                                stroke: "blue"
+                            };
+                            var tools_bg_line = "M0 100 L200 100 M0 200 L200 200 M0 300 L200 300 M100 0 L100 400";
+                            tools.path(tools_bg_line).attr(tools_bg_line_atr);
+                            
+                            // draw bg dot
+                            var tools_bg_dot_atr = {
+                                fill: "red"
+                            }
+                            var tools_bg_dot_set = tools.set();
+                            tools_bg_dot_set.push(tools.circle(50, 50, 3), tools.circle(50, 150, 3), tools.circle(50, 250, 3), tools.circle(50, 350, 3), tools.circle(150, 50, 3), tools.circle(150, 150, 3), tools.circle(150, 250, 3), tools.circle(150, 350, 3));
+                            tools_bg_dot_set.attr(tools_bg_dot_atr);
+                        }
+                        
+                        function initToolsPanelDraw(tools){
+                            // draw tools panel
+                            var tools_panel_node1 = tools.circle(50, 50, 40).attr(tools_panel.atr0);
+                            var tools_panel_node2 = tools.ellipse(50, 150, 40, 20).attr(tools_panel.atr0);
+                            
+                            tools_panel_node1.node.onclick = function(){
+                                setCurrentNode(tools_panel_node1);
+                            };
+                            tools_panel_node2.node.onclick = function(){
+                                setCurrentNode(tools_panel_node2);
+                            };
+            				tools_panel_node1.drag(tools_panel.move,tools_panel.start,tools_panel.end);
+            				tools_panel_node2.drag(tools_panel.move,tools_panel.start,tools_panel.end);
+                            
+                        }
+                        
+                        function setCurrentNode(current){
+                            if (tools_panel.node0) {
+                                if (current == tools_panel.node0) 
+                                    return;
+                                tools_panel.node0.attr(tools_panel.atr0);
+                            }
+                            tools_panel.node0 = current;
+                            tools_panel.node0.attr(tools_panel.atr1);
+                        }
+                        
+                        
+                        function log(s){
+                            console.log(s);
+                        }
+                    
+        </script>
+    </head>
+    <body>
+        <div id="tools">
+        </div>
+        <div id="paper">
+        </div>
+    </body>
+</html>
