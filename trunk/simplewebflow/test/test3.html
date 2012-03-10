@@ -1,0 +1,224 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Untitled Document</title>
+        <style type="text/css">
+            div {
+                border: 1px solid #008080;
+                float: left;
+                padding: 1px;
+            }
+            
+            #tools {
+                width: 202px;
+                height: 402px;
+            }
+            
+            #paper {
+                width: 602px;
+                height: 402px;
+            }
+        </style>
+        <script type="text/javascript" src="../lib/jquery/jquery-1.3.2.min.js">
+        </script>
+        <script type="text/javascript" src="../lib/raphael/raphael-1.5.2.js">
+        </script>
+        <script type="text/javascript">
+        	// extends Raphael 
+			function getX(){
+				return this.type == 'rect' ? this.attr('x') : this.attr('cx');
+			}
+			function getY(){
+				return this.type == 'rect' ? this.attr('y') : this.attr('cy');
+			}
+			Raphael.el.getX = function(){
+				return this.type == 'rect' ? this.attr('x') : this.attr('cx');
+			}
+			Raphael.el.getY = function(){
+				return this.type == 'rect' ? this.attr('y') : this.attr('cy');
+			}
+            $(function(){
+                init();
+            });
+            
+            function init(){
+                var paper = Raphael('paper', 600, 400);
+                var tools = paper;
+                var work = paper;
+                // init tools bg draw
+                initToolsPanelBg(tools);
+                
+                // init tools panel draw
+                initToolsPanelDraw(tools);
+                
+                // init paper bg draw
+                initWorkPanelBg(work);
+            }
+            
+            
+            
+            var tools_panel = {
+                atr0: {
+                    stroke: "orange",
+                    fill: "green",
+					opacity: .5
+                },
+                atr1: {
+                    stroke: "blue",
+                    fill: "pink"
+                },
+				line_atr0:{
+					stroke: "green",
+					opacity: .5,
+					"stroke-width":5
+				},
+				line_atr1:{
+					stroke: "blue",
+				},
+                selected: null,
+				selected_atr0: null,
+                start: function(){
+                    var dragger = this.clone();
+                    this.ox = this.getX();
+                    this.oy = this.getY();
+                    this.attr({
+                        opacity: .2
+                    });
+					this.dragger = dragger;
+					setCurrentNode(this);
+                },
+                move: function(dx, dy){
+                    var atr = this.type == 'rect' ? {
+                        x: this.ox + dx,
+                        y: this.oy + dy
+                    } : {
+                        cx: this.ox + dx,
+                        cy: this.oy + dy
+                    };
+                    this.dragger.attr(atr);
+                },
+                end: function(){
+					// dragger
+					var dragger = this.dragger;
+					
+					var mx = dragger.getX() - this.ox;
+					var my = dragger.getY() - this.oy;
+					if(mx<200){
+						this.dragger = null;
+						dragger.remove();
+					}else{
+	                    dragger.attr({
+	                        stroke: "orange",
+	                        fill: "green",
+	                        opacity: 1
+	                    });
+						dragger.drag(work_panel.move,work_panel.start,work_panel.end);
+					}
+					// tools
+					this.attr({
+                        opacity: .5
+                    });
+                }
+            };
+			
+            function initToolsPanelBg(tools){
+                // draw background
+                var tools_bg = tools.rect(0, 0, 200, 400).attr({
+                    fill: "#c8c8c8",
+                    stroke: "#ff0000"
+                });
+                // draw bg line
+                var tools_bg_line_atr = {
+                    stroke: "blue"
+                };
+                var tools_bg_line_path = "M0 100 L200 100 M0 200 L200 200 M0 300 L200 300 M100 0 L100 400";
+                var tools_bg_line = tools.path(tools_bg_line_path).attr(tools_bg_line_atr);
+                tools_bg_line.toBack();
+                // draw bg dot
+                var tools_bg_dot_atr = {
+                    fill: "red"
+                }
+                var tools_bg_dot_set = tools.set();
+                tools_bg_dot_set.push(tools.circle(50, 50, 3), tools.circle(50, 150, 3), tools.circle(50, 250, 3), tools.circle(50, 350, 3), tools.circle(150, 50, 3), tools.circle(150, 150, 3), tools.circle(150, 250, 3), tools.circle(150, 350, 3));
+                tools_bg_dot_set.attr(tools_bg_dot_atr);
+                tools_bg_dot_set.toBack();
+                tools_bg.toBack();
+            }
+            
+            function initToolsPanelDraw(tools){
+                // draw tools panel -- left
+                var tools_panel_node1 = tools.circle(50, 50, 30).attr(tools_panel.atr0);
+                var tools_panel_node2 = tools.ellipse(50, 150, 40, 20).attr(tools_panel.atr0);
+                
+                tools_panel_node1.drag(tools_panel.move, tools_panel.start, tools_panel.end);
+                tools_panel_node2.drag(tools_panel.move, tools_panel.start, tools_panel.end);
+				tools_panel_node1.dblclick(function(){
+					alert("double");
+				});
+				tools_panel_node1.click(function(){
+					alert("click");
+				});
+				
+				// draw tools panel -- right
+                var tools_panel_node5 = tools.path("M120 80 L180 20").attr(tools_panel.line_atr0);
+				tools_panel_node5.node.onclick = function(){
+					setCurrentNode(tools_panel_node5,tools_panel.line_atr0,tools_panel.line_atr1);
+				}
+            }
+            
+            function setCurrentNode(current,atr0,atr1){
+                if (tools_panel.selected) {
+                    if (current == tools_panel.selected) 
+                        return;
+                    tools_panel.selected.attr(tools_panel.selected_atr0);
+                }
+                tools_panel.selected = current;
+				if(atr0 && atr1){
+                	current.attr(atr1);
+                	tools_panel.selected_atr0 = atr0;
+				}
+            }
+            
+			var work_panel = {
+				start:function(){
+					this.ox = this.type == 'rect' ? this.attr('x') : this.attr('cx');
+                    this.oy = this.type == 'rect' ? this.attr('y') : this.attr('cy');
+                    this.attr({
+                        opacity: .5
+                    });
+				},
+				move:function(dx,dy){
+					 var atr = this.type == 'rect' ? {
+                        x: this.ox + dx,
+                        y: this.oy + dy
+                    } : {
+                        cx: this.ox + dx,
+                        cy: this.oy + dy
+                    };
+                    this.attr(atr);
+				},
+				end:function(){
+					this.attr({
+                        opacity: 1
+                    });
+				}
+			};
+			function initWorkPanelBg(work){
+                var work_bg = work.rect(200, 0, 400, 400).attr({
+                    fill: "#c0c0c0",
+                    stroke: "#ff0000"
+                });
+                work_bg.toBack();
+            }
+            
+            function log(s){
+                console.log(s);
+            }
+        </script>
+    </head>
+    <body>
+        <div id="paper">
+        </div>
+    </body>
+</html>
